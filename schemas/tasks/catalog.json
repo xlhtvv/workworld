@@ -1,0 +1,140 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "catalog_version": "1.0",
+  "published_at": "2026-08-10T00:00:00Z",
+  "status": "published",
+  "schemas": [
+    {
+      "id": "text.generate", "version": "1.0", "status": "published",
+      "name": {"en": "Generate text", "zh": "生成文本"},
+      "description": {"en": "Generate text under explicit instructions.", "zh": "按明确指令生成文本。"},
+      "input_schema": {"type": "object", "additionalProperties": false, "required": ["prompt", "difficulty"], "properties": {"prompt": {"type": "string", "minLength": 1, "maxLength": 20000}, "tone": {"type": "string", "default": "neutral"}, "max_characters": {"type": "integer", "minimum": 1, "maximum": 100000, "default": 4000}, "difficulty": {"enum": ["simple", "standard", "complex"]}}},
+      "output_schema": {"type": "object", "additionalProperties": false, "required": ["text"], "properties": {"text": {"type": "string", "minLength": 1}}},
+      "artifacts": {"input": [], "output": []}, "clarifiable_fields": ["tone", "max_characters"],
+      "difficulty_multipliers": {"simple": 0.8, "standard": 1.0, "complex": 1.4},
+      "hard_validation": ["output_schema", "max_characters"], "quality_rubric": ["instruction_following", "coherence", "safety"],
+      "metering": {"base_tokens": 200, "input_unit": "text_token", "output_unit": "text_token"}
+    },
+    {
+      "id": "text.summarize", "version": "1.0", "status": "published",
+      "name": {"en": "Summarize text", "zh": "文本摘要"},
+      "description": {"en": "Summarize supplied text.", "zh": "总结所提供的文本。"},
+      "input_schema": {"type": "object", "additionalProperties": false, "required": ["text", "difficulty"], "properties": {"text": {"type": "string", "minLength": 1, "maxLength": 500000}, "max_characters": {"type": "integer", "minimum": 50, "maximum": 50000, "default": 1000}, "focus": {"type": "string", "default": "general"}, "difficulty": {"enum": ["simple", "standard", "complex"]}}},
+      "output_schema": {"type": "object", "additionalProperties": false, "required": ["summary"], "properties": {"summary": {"type": "string", "minLength": 1}}},
+      "artifacts": {"input": [], "output": []}, "clarifiable_fields": ["focus", "max_characters"],
+      "difficulty_multipliers": {"simple": 0.8, "standard": 1.0, "complex": 1.4},
+      "hard_validation": ["output_schema", "max_characters"], "quality_rubric": ["coverage", "faithfulness", "conciseness"],
+      "metering": {"base_tokens": 150, "input_unit": "text_token", "output_unit": "text_token"}
+    },
+    {
+      "id": "image.generate", "version": "1.0", "status": "published",
+      "name": {"en": "Generate image", "zh": "生成图片"},
+      "description": {"en": "Generate an image from a prompt.", "zh": "根据提示生成图片。"},
+      "input_schema": {"type": "object", "additionalProperties": false, "required": ["prompt", "width", "height", "difficulty"], "properties": {"prompt": {"type": "string", "minLength": 1, "maxLength": 10000}, "width": {"type": "integer", "enum": [512, 1024, 1536]}, "height": {"type": "integer", "enum": [512, 1024, 1536]}, "format": {"enum": ["png", "jpeg", "webp"], "default": "png"}, "difficulty": {"enum": ["simple", "standard", "complex"]}}},
+      "output_schema": {"type": "object", "additionalProperties": false, "required": ["artifact_id"], "properties": {"artifact_id": {"type": "string", "pattern": "^artifact_"}}},
+      "artifacts": {"input": [], "output": [{"kind": "image", "min": 1, "max": 1}]}, "clarifiable_fields": ["format"],
+      "difficulty_multipliers": {"simple": 0.8, "standard": 1.0, "complex": 1.4},
+      "hard_validation": ["output_schema", "artifact_clean", "image_dimensions"], "quality_rubric": ["prompt_alignment", "composition", "technical_quality"],
+      "metering": {"base_tokens": 1000, "input_unit": "text_token", "output_unit": "megapixel"}
+    },
+    {
+      "id": "image.edit", "version": "1.0", "status": "published",
+      "name": {"en": "Edit image", "zh": "编辑图片"},
+      "description": {"en": "Apply requested edits to an image.", "zh": "对图片执行指定编辑。"},
+      "input_schema": {"type": "object", "additionalProperties": false, "required": ["instruction", "difficulty"], "properties": {"instruction": {"type": "string", "minLength": 1, "maxLength": 10000}, "preserve_dimensions": {"type": "boolean", "default": true}, "difficulty": {"enum": ["simple", "standard", "complex"]}}},
+      "output_schema": {"type": "object", "additionalProperties": false, "required": ["artifact_id"], "properties": {"artifact_id": {"type": "string", "pattern": "^artifact_"}}},
+      "artifacts": {"input": [{"kind": "image", "min": 1, "max": 5}], "output": [{"kind": "image", "min": 1, "max": 1}]}, "clarifiable_fields": ["preserve_dimensions"],
+      "difficulty_multipliers": {"simple": 0.8, "standard": 1.0, "complex": 1.4},
+      "hard_validation": ["output_schema", "artifact_clean", "image_decodable"], "quality_rubric": ["edit_fidelity", "preservation", "technical_quality"],
+      "metering": {"base_tokens": 1200, "input_unit": "megapixel", "output_unit": "megapixel"}
+    },
+    {
+      "id": "document.summarize", "version": "1.0", "status": "published",
+      "name": {"en": "Summarize document", "zh": "文档摘要"},
+      "description": {"en": "Summarize uploaded documents.", "zh": "总结上传的文档。"},
+      "input_schema": {"type": "object", "additionalProperties": false, "required": ["max_characters", "difficulty"], "properties": {"max_characters": {"type": "integer", "minimum": 100, "maximum": 100000, "default": 3000}, "focus": {"type": "string", "default": "general"}, "difficulty": {"enum": ["simple", "standard", "complex"]}}},
+      "output_schema": {"type": "object", "additionalProperties": false, "required": ["summary"], "properties": {"summary": {"type": "string", "minLength": 1}}},
+      "artifacts": {"input": [{"kind": "document", "min": 1, "max": 10}], "output": []}, "clarifiable_fields": ["focus", "max_characters"],
+      "difficulty_multipliers": {"simple": 0.8, "standard": 1.0, "complex": 1.4},
+      "hard_validation": ["output_schema", "max_characters"], "quality_rubric": ["coverage", "faithfulness", "structure"],
+      "metering": {"base_tokens": 300, "input_unit": "document_page", "output_unit": "text_token"}
+    },
+    {
+      "id": "document.translate", "version": "1.0", "status": "published",
+      "name": {"en": "Translate document", "zh": "翻译文档"},
+      "description": {"en": "Translate a document into a target language.", "zh": "将文档翻译为目标语言。"},
+      "input_schema": {"type": "object", "additionalProperties": false, "required": ["target_language", "difficulty"], "properties": {"target_language": {"type": "string", "minLength": 2, "maxLength": 35}, "preserve_layout": {"type": "boolean", "default": true}, "difficulty": {"enum": ["simple", "standard", "complex"]}}},
+      "output_schema": {"type": "object", "additionalProperties": false, "required": ["artifact_id", "language"], "properties": {"artifact_id": {"type": "string", "pattern": "^artifact_"}, "language": {"type": "string"}}},
+      "artifacts": {"input": [{"kind": "document", "min": 1, "max": 1}], "output": [{"kind": "document", "min": 1, "max": 1}]}, "clarifiable_fields": ["preserve_layout"],
+      "difficulty_multipliers": {"simple": 0.8, "standard": 1.0, "complex": 1.4},
+      "hard_validation": ["output_schema", "artifact_clean", "target_language"], "quality_rubric": ["meaning", "fluency", "terminology"],
+      "metering": {"base_tokens": 400, "input_unit": "document_page", "output_unit": "text_token"}
+    },
+    {
+      "id": "spreadsheet.analyze", "version": "1.0", "status": "published",
+      "name": {"en": "Analyze spreadsheet", "zh": "分析表格"},
+      "description": {"en": "Analyze structured spreadsheet data.", "zh": "分析结构化表格数据。"},
+      "input_schema": {"type": "object", "additionalProperties": false, "required": ["questions", "difficulty"], "properties": {"questions": {"type": "array", "minItems": 1, "maxItems": 20, "items": {"type": "string", "minLength": 1}}, "include_charts": {"type": "boolean", "default": false}, "difficulty": {"enum": ["simple", "standard", "complex"]}}},
+      "output_schema": {"type": "object", "additionalProperties": false, "required": ["answers"], "properties": {"answers": {"type": "array", "minItems": 1, "items": {"type": "string"}}, "artifact_ids": {"type": "array", "items": {"type": "string", "pattern": "^artifact_"}}}},
+      "artifacts": {"input": [{"kind": "spreadsheet", "min": 1, "max": 5}], "output": [{"kind": "image", "min": 0, "max": 20}]}, "clarifiable_fields": ["include_charts"],
+      "difficulty_multipliers": {"simple": 0.8, "standard": 1.0, "complex": 1.4},
+      "hard_validation": ["output_schema", "answer_count"], "quality_rubric": ["correctness", "evidence", "clarity"],
+      "metering": {"base_tokens": 500, "input_unit": "nonempty_cell", "output_unit": "text_token"}
+    },
+    {
+      "id": "audio.transcribe", "version": "1.0", "status": "published",
+      "name": {"en": "Transcribe audio", "zh": "音频转录"},
+      "description": {"en": "Transcribe speech in an audio file.", "zh": "转录音频文件中的语音。"},
+      "input_schema": {"type": "object", "additionalProperties": false, "required": ["difficulty"], "properties": {"language_hint": {"type": ["string", "null"], "default": null}, "timestamps": {"enum": ["none", "segment"], "default": "segment"}, "difficulty": {"enum": ["simple", "standard", "complex"]}}},
+      "output_schema": {"type": "object", "additionalProperties": false, "required": ["text", "language"], "properties": {"text": {"type": "string", "minLength": 1}, "language": {"type": "string"}, "segments": {"type": "array", "items": {"type": "object", "required": ["start", "end", "text"], "properties": {"start": {"type": "number", "minimum": 0}, "end": {"type": "number", "minimum": 0}, "text": {"type": "string"}}}}}},
+      "artifacts": {"input": [{"kind": "audio", "min": 1, "max": 1}], "output": []}, "clarifiable_fields": ["language_hint", "timestamps"],
+      "difficulty_multipliers": {"simple": 0.8, "standard": 1.0, "complex": 1.4},
+      "hard_validation": ["output_schema", "timestamp_bounds"], "quality_rubric": ["word_accuracy", "speaker_fidelity", "timestamps"],
+      "metering": {"base_tokens": 500, "input_unit": "audio_second", "output_unit": "text_token"}
+    },
+    {
+      "id": "video.summarize", "version": "1.0", "status": "published",
+      "name": {"en": "Summarize video", "zh": "视频摘要"},
+      "description": {"en": "Create a grounded summary of a video.", "zh": "生成有依据的视频摘要。"},
+      "input_schema": {"type": "object", "additionalProperties": false, "required": ["max_characters", "difficulty"], "properties": {"max_characters": {"type": "integer", "minimum": 100, "maximum": 50000, "default": 2000}, "include_timestamps": {"type": "boolean", "default": true}, "difficulty": {"enum": ["simple", "standard", "complex"]}}},
+      "output_schema": {"type": "object", "additionalProperties": false, "required": ["summary"], "properties": {"summary": {"type": "string", "minLength": 1}, "timestamps": {"type": "array", "items": {"type": "number", "minimum": 0}}}},
+      "artifacts": {"input": [{"kind": "video", "min": 1, "max": 1}], "output": []}, "clarifiable_fields": ["max_characters", "include_timestamps"],
+      "difficulty_multipliers": {"simple": 0.8, "standard": 1.0, "complex": 1.4},
+      "hard_validation": ["output_schema", "timestamp_bounds"], "quality_rubric": ["coverage", "grounding", "conciseness"],
+      "metering": {"base_tokens": 1000, "input_unit": "video_second", "output_unit": "text_token"}
+    },
+    {
+      "id": "archive.process", "version": "1.0", "status": "published",
+      "name": {"en": "Process archive", "zh": "处理压缩包"},
+      "description": {"en": "Inspect and process a safe archive under instructions.", "zh": "按指令检查并处理安全压缩包。"},
+      "input_schema": {"type": "object", "additionalProperties": false, "required": ["instruction", "difficulty"], "properties": {"instruction": {"type": "string", "minLength": 1, "maxLength": 10000}, "output_format": {"enum": ["json", "archive"], "default": "json"}, "difficulty": {"enum": ["simple", "standard", "complex"]}}},
+      "output_schema": {"type": "object", "additionalProperties": false, "required": ["manifest"], "properties": {"manifest": {"type": "array", "items": {"type": "string"}}, "artifact_id": {"type": ["string", "null"]}}},
+      "artifacts": {"input": [{"kind": "archive", "min": 1, "max": 1}], "output": [{"kind": "archive", "min": 0, "max": 1}]}, "clarifiable_fields": ["output_format"],
+      "difficulty_multipliers": {"simple": 0.8, "standard": 1.0, "complex": 1.4},
+      "hard_validation": ["output_schema", "archive_limits", "artifact_clean"], "quality_rubric": ["completeness", "instruction_following", "safety"],
+      "metering": {"base_tokens": 600, "input_unit": "archive_file", "output_unit": "uncompressed_megabyte"}
+    },
+    {
+      "id": "repository.code-review", "version": "1.0", "status": "published",
+      "name": {"en": "Review repository", "zh": "审查代码仓库"},
+      "description": {"en": "Review a repository snapshot for actionable defects.", "zh": "审查仓库快照并找出可操作缺陷。"},
+      "input_schema": {"type": "object", "additionalProperties": false, "required": ["focus", "difficulty"], "properties": {"focus": {"type": "array", "minItems": 1, "items": {"enum": ["correctness", "security", "performance", "maintainability"]}}, "base_commit": {"type": ["string", "null"], "default": null}, "difficulty": {"enum": ["simple", "standard", "complex"]}}},
+      "output_schema": {"type": "object", "additionalProperties": false, "required": ["findings"], "properties": {"findings": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["severity", "path", "summary"], "properties": {"severity": {"enum": ["critical", "high", "medium", "low"]}, "path": {"type": "string"}, "line": {"type": ["integer", "null"], "minimum": 1}, "summary": {"type": "string", "minLength": 1}}}}}},
+      "artifacts": {"input": [{"kind": "repository_snapshot", "min": 1, "max": 1}], "output": []}, "clarifiable_fields": ["base_commit"],
+      "difficulty_multipliers": {"simple": 0.8, "standard": 1.0, "complex": 1.4},
+      "hard_validation": ["output_schema", "paths_exist", "line_bounds"], "quality_rubric": ["validity", "severity", "actionability"],
+      "metering": {"base_tokens": 800, "input_unit": "code_line", "output_unit": "finding"}
+    },
+    {
+      "id": "json.transform", "version": "1.0", "status": "published",
+      "name": {"en": "Transform JSON", "zh": "转换 JSON"},
+      "description": {"en": "Transform JSON under deterministic rules.", "zh": "按确定规则转换 JSON。"},
+      "input_schema": {"type": "object", "additionalProperties": false, "required": ["document", "operations", "difficulty"], "properties": {"document": {}, "operations": {"type": "array", "minItems": 1, "maxItems": 100, "items": {"type": "object"}}, "strict": {"type": "boolean", "default": true}, "difficulty": {"enum": ["simple", "standard", "complex"]}}},
+      "output_schema": {"type": "object", "additionalProperties": false, "required": ["document"], "properties": {"document": {}}},
+      "artifacts": {"input": [], "output": []}, "clarifiable_fields": ["strict"],
+      "difficulty_multipliers": {"simple": 0.8, "standard": 1.0, "complex": 1.4},
+      "hard_validation": ["output_schema", "operation_postconditions"], "quality_rubric": ["correctness", "completeness", "minimal_change"],
+      "metering": {"base_tokens": 100, "input_unit": "json_node", "output_unit": "json_node"}
+    }
+  ]
+}

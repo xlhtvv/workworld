@@ -1,0 +1,2 @@
+class ArtifactError(ValueError):
+    pass

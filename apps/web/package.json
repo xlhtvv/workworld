@@ -1,0 +1,34 @@
+{
+  "name": "@workworld/web",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:e2e": "playwright test",
+    "test:e2e:compose": "playwright test --config playwright.compose.config.ts"
+  },
+  "dependencies": {
+    "next": "^16.0.10",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0"
+  },
+  "devDependencies": {
+    "@esbuild/linux-x64": "^0.28.2",
+    "@eslint/eslintrc": "^3.3.1",
+    "@playwright/test": "1.51.1",
+    "@rollup/rollup-linux-x64-gnu": "^4.62.4",
+    "@types/node": "^24.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "eslint": "^9.0.0",
+    "eslint-config-next": "^16.0.10",
+    "typescript": "^5.9.0",
+    "vitest": "^3.2.0"
+  },
+  "packageManager": "pnpm@10.33.0"
+}

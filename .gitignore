@@ -1,0 +1,50 @@
+# Local configuration and credentials. Keep only the documented template.
+.env*
+!.env.example
+
+# Python environments, caches, coverage, and packages.
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+.coverage
+.coverage.*
+htmlcov/
+build/
+*.whl
+
+# JavaScript dependencies and generated output.
+node_modules/
+.next/
+dist/
+coverage/
+playwright-report/
+test-results/
+*.tsbuildinfo
+*.tgz
+pnpm-debug.log*
+npm-debug.log*
+yarn-error.log*
+
+# Local databases, logs, keys, and certificates.
+*.db
+*.db-*
+*.sqlite
+*.sqlite3
+*.log
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+
+# Editors and operating systems.
+.idea/
+.vscode/
+*.swp
+*~
+.DS_Store
+Thumbs.db

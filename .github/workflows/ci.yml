@@ -1,0 +1,79 @@
+name: CI
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  python:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - run: pip install '.[dev]' ./sdk/python
+      - run: python -m ruff check scripts apps/api apps/worker sdk/python examples/python-pull-text-agent examples/python-media-echo-agent
+      - run: python -m mypy apps/api/src apps/worker/src sdk/python/src
+      - run: PYTHONPATH=sdk/python/src python -m pytest apps/api/tests sdk/python/tests
+  web:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with: {version: 10.33.0}
+      - uses: actions/setup-node@v4
+        with: {node-version: 24, cache: pnpm, cache-dependency-path: apps/web/pnpm-lock.yaml}
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - run: pip install '.[dev]' ./sdk/python
+      - run: pnpm --dir apps/web install --frozen-lockfile
+      - run: pnpm --dir apps/web lint
+      - run: pnpm --dir apps/web typecheck
+      - run: pnpm --dir apps/web test
+      - run: pnpm --dir apps/web build
+      - run: pnpm --dir apps/web exec playwright install --with-deps chromium
+      - run: pnpm --dir apps/web test:e2e
+      - run: apps/web/node_modules/.bin/tsc -p sdk/typescript/tsconfig.json
+      - run: pnpm --dir sdk/typescript test
+      - run: apps/web/node_modules/.bin/tsc -p examples/typescript-push-json-agent/tsconfig.json --noEmit
+      - run: pnpm --dir examples/typescript-push-json-agent install --frozen-lockfile
+      - run: pnpm --dir examples/typescript-push-json-agent build
+      - run: pnpm --dir examples/typescript-push-json-agent test:process
+  compose-smoke:
+    runs-on: ubuntu-latest
+    needs: [python, web]
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with: {version: 10.33.0}
+      - uses: actions/setup-node@v4
+        with: {node-version: 24, cache: pnpm, cache-dependency-path: apps/web/pnpm-lock.yaml}
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - run: pip install '.[dev]' ./sdk/python
+      - run: pnpm --dir apps/web install --frozen-lockfile
+      - run: pnpm --dir apps/web exec playwright install --with-deps chromium
+      - run: bash scripts/compose-smoke.sh
+  hosted-ai:
+    runs-on: ubuntu-latest
+    if: github.event_name != 'pull_request'
+    env:
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      OPENAI_EVALUATION_MODEL: ${{ vars.OPENAI_EVALUATION_MODEL || 'gpt-5-mini' }}
+      OPENAI_MODERATION_MODEL: ${{ vars.OPENAI_MODERATION_MODEL || 'omni-moderation-latest' }}
+      OPENAI_TRANSCRIPTION_MODEL: ${{ vars.OPENAI_TRANSCRIPTION_MODEL || 'gpt-4o-mini-transcribe' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - run: sudo apt-get update && sudo apt-get install --no-install-recommends -y ffmpeg
+      - run: pip install '.[dev]'
+      - name: Require the secret for a manually requested hosted acceptance
+        if: github.event_name == 'workflow_dispatch' && env.OPENAI_API_KEY == ''
+        run: |
+          echo 'OPENAI_API_KEY repository secret is required for hosted AI acceptance.' >&2
+          exit 1
+      - name: Run real hosted model acceptance
+        if: env.OPENAI_API_KEY != ''
+        run: python scripts/real_hosted_ai.py
